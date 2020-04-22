@@ -7,10 +7,14 @@ import ru.gb.jtwo.network.SocketThreadListener;
 
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
+import java.util.Enumeration;
+import java.util.Vector;
 
 public class ChatServer implements ServerSocketThreadListener, SocketThreadListener {
 
     ServerSocketThread server;
+    Vector<SocketThread> v= new Vector<>();
 
     public void start(int port) {
         if (server != null && server.isAlive())
@@ -54,7 +58,7 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
     public void onSocketAccepted(ServerSocketThread thread, ServerSocket server, Socket socket) {
         putLog("Client connected");
         String name = "SocketThread " + socket.getInetAddress() + ":" + socket.getPort();
-        new SocketThread(this, name, socket);
+        v.add(new SocketThread(this, name, socket));
     }
 
     @Override
@@ -79,6 +83,13 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
 
     @Override
     public void onSocketStop(SocketThread thread) {
+        int i = 0;
+        Enumeration<SocketThread> vEnum = v.elements();
+        while (vEnum.hasMoreElements()) {
+           if(thread == vEnum.nextElement())
+               v.remove(i);
+        i++;
+        }
         putLog("Socket stopped");
     }
 
@@ -89,7 +100,11 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
 
     @Override
     public void onReceiveString(SocketThread thread, Socket socket, String msg) {
-        thread.sendMessage("echo: " + msg);
+        Enumeration<SocketThread> vEnum = v.elements();
+        while (vEnum.hasMoreElements()) {
+            thread = vEnum.nextElement();
+            thread.sendMessage("echo: " + msg);
+        }
     }
 
     @Override

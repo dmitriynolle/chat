@@ -33,6 +33,7 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
     private final JList<String> userList = new JList<>();
     private boolean shownIoErrors = false;
     private SocketThread socketThread;
+    private Socket socket;
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
@@ -62,6 +63,8 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         tfMessage.addActionListener(this);
         btnSend.addActionListener(this);
         btnLogin.addActionListener(this);
+        btnDisconnect.addActionListener(this);
+        panelBottom.setVisible(false);
 
         panelTop.add(tfIPAddress);
         panelTop.add(tfPort);
@@ -89,6 +92,10 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
             sendMessage();
         } else if (src == btnLogin) {
             connect();
+        } else if (src == btnDisconnect) {
+            socketThread.close();
+            panelTop.setVisible(true);
+            panelBottom.setVisible(false);
         } else {
             throw new RuntimeException("Unknown source:" + src);
         }
@@ -96,8 +103,10 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
 
     private void connect() {
         try {
-            Socket socket = new Socket(tfIPAddress.getText(), Integer.parseInt(tfPort.getText()));
+            socket = new Socket(tfIPAddress.getText(), Integer.parseInt(tfPort.getText()));
             socketThread = new SocketThread(this, "Client", socket);
+            panelBottom.setVisible(true);
+            panelTop.setVisible(false);
         } catch (IOException e) {
             showException(Thread.currentThread(), e);
         }
@@ -166,9 +175,7 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
     }
 
     @Override
-    public void onSocketStop(SocketThread thread) {
-        putLog("Stop");
-    }
+    public void onSocketStop(SocketThread thread) { putLog("Stop"); }
 
     @Override
     public void onSocketReady(SocketThread thread, Socket socket) {
