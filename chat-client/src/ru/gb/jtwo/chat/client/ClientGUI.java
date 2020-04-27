@@ -189,8 +189,14 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
 
     @Override
     public void onReceiveString(SocketThread thread, Socket socket, String msg) {
-
-        putLog(msg);
+        String[] subMsg;
+        if(msg.contains("bcast")) {
+            subMsg = msg.split("±");
+            msg = subMsg[2] + " сообщает \n" + subMsg[3];
+            putLog(msg);
+        }
+        else
+            putLog(msg);
     }
 
     @Override
